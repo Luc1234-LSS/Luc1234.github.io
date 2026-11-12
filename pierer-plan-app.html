@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#070b16">
+<title>Pierer Plan – Vertretungsplan App</title>
+<!-- Eigenstaendige Pierer-Plan-App, gebaut aus index.html. Proxy-Generator: g5jrq8w3k7 -->
+</head>
+<body>
+<style>
+  :root{
+    --bg:#070b16; --bg2:#0b1226; --card:rgba(255,255,255,.06); --card2:rgba(255,255,255,.09);
+    --line:rgba(255,255,255,.12); --txt:#eef2ff; --mut:#9aa7c7; --acc:#6c7bff; --acc2:#22d3ee;
+    --ok:#34d399; --warn:#fbbf24; --bad:#fb7185; --vio:#a78bfa;
+    --r:18px; --shadow:0 20px 60px rgba(0,0,0,.45);
+  }
+  *{box-sizing:border-box}
+  html{background:var(--bg)}
+  body{
+    margin:0; text-align:left; color:var(--txt);
+    font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial;
+    background:
+      radial-gradient(900px 500px at 10% -5%, rgba(108,123,255,.28), transparent 60%),
+      radial-gradient(800px 500px at 95% 10%, rgba(34,211,238,.18), transparent 60%),
+      radial-gradient(700px 600px at 50% 110%, rgba(167,139,250,.16), transparent 60%),
+      linear-gradient(180deg,var(--bg),var(--bg2));
+    min-height:100vh;
+  }
+  .blob{position:fixed; border-radius:50%; filter:blur(90px); opacity:.35; pointer-events:none; z-index:0; animation:drift 14s ease-in-out infinite alternate}
+  .b1{width:420px;height:420px;left:-120px;top:-120px;background:#4f46e5}
+  .b2{width:360px;height:360px;right:-100px;top:6%;background:#0ea5e9;animation-delay:-4s}
+  .b3{width:300px;height:300px;left:30%;bottom:-140px;background:#7c3aed;animation-delay:-8s}
+  @keyframes drift{from{transform:translate(0,0) scale(1)}to{transform:translate(60px,40px) scale(1.15)}}
+  .wrap{position:relative;z-index:1;max-width:1080px;margin:0 auto;padding:18px 16px 90px}
+  /* Loader */
+  #loader{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;
+    background:radial-gradient(800px 500px at 50% 20%, rgba(108,123,255,.25), transparent), rgba(4,7,15,.92);backdrop-filter:blur(10px);
+    transition:opacity .5s ease, visibility .5s}
+  #loader.hide{opacity:0;visibility:hidden}
+  .loadCard{width:min(440px,92vw);background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:24px;padding:28px 24px;text-align:center;box-shadow:var(--shadow)}
+  .rings{position:relative;width:110px;height:110px;margin:2px auto 14px}
+  .rings span{position:absolute;inset:0;border-radius:50%;border:3px solid transparent}
+  .rings span:nth-child(1){border-top-color:var(--acc2);animation:spin 1.1s linear infinite}
+  .rings span:nth-child(2){inset:14px;border-top-color:var(--acc);animation:spin 1.6s linear infinite reverse}
+  .rings span:nth-child(3){inset:28px;border-top-color:var(--vio);animation:spin 2.2s linear infinite}
+  .rings b{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:30px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .loadBar{height:8px;border-radius:99px;background:rgba(255,255,255,.1);overflow:hidden;margin:14px 0 8px}
+  .loadBar i{display:block;height:100%;width:10%;border-radius:99px;background:linear-gradient(90deg,var(--acc),var(--acc2),var(--vio));background-size:200% 100%;animation:slide 1.2s linear infinite;transition:width .3s}
+  @keyframes slide{from{background-position:0 0}to{background-position:200% 0}}
+  #loadStep{color:var(--mut);font-size:13.5px;min-height:20px}
+  /* Header */
+  header.top{position:sticky;top:0;z-index:20;backdrop-filter:blur(14px);background:rgba(7,11,22,.72);border-bottom:1px solid var(--line)}
+  header.top .inner{max-width:1080px;margin:0 auto;padding:12px 16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+  .logo{width:46px;height:46px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:20px;
+    background:linear-gradient(135deg,#6c7bff,#22d3ee);box-shadow:0 8px 24px rgba(108,123,255,.45);animation:float 3.5s ease-in-out infinite}
+  @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+  .t h1{margin:0;font-size:19px;letter-spacing:.2px}
+  .t h1 .grad{background:linear-gradient(90deg,#a5b4ff,#67e8f9,#c4b5fd);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .t p{margin:2px 0 0;font-size:12.5px;color:var(--mut)}
+  .sp{flex:1}
+  .btn{border:1px solid var(--line);background:var(--card);color:var(--txt);border-radius:12px;padding:9px 13px;font-size:13.5px;cursor:pointer;
+    display:inline-flex;align-items:center;gap:7px;text-decoration:none;transition:transform .15s, background .2s, border-color .2s}
+  .btn:hover{background:var(--card2);transform:translateY(-1px);border-color:rgba(255,255,255,.25)}
+  .btn.primary{background:linear-gradient(135deg,#6c7bff,#22d3ee);border:none;font-weight:700;box-shadow:0 8px 24px rgba(108,123,255,.4)}
+  .btn.small{padding:7px 10px;font-size:12.5px;border-radius:10px}
+  .btn.on{outline:2px solid var(--acc2)}
+  /* Hero */
+  .hero{margin:18px 0 14px;padding:20px;border-radius:22px;border:1px solid var(--line);
+    background:linear-gradient(135deg,rgba(108,123,255,.18),rgba(34,211,238,.1),rgba(167,139,250,.14));
+    position:relative;overflow:hidden;box-shadow:var(--shadow)}
+  .hero::after{content:"";position:absolute;inset:-40%;background:conic-gradient(from 0deg,transparent,rgba(255,255,255,.07),transparent 30%);animation:spin 9s linear infinite;pointer-events:none}
+  .hero h2{margin:0 0 6px;font-size:24px}
+  .hero p{margin:0;color:var(--mut);font-size:14px;line-height:1.5}
+  .pills{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;position:relative;z-index:1}
+  .pill{font-size:12.5px;padding:7px 11px;border-radius:99px;border:1px solid var(--line);background:rgba(0,0,0,.3)}
+  .pill.live{border-color:rgba(52,211,153,.5);color:#a7f3d0}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--ok);display:inline-block;margin-right:6px;animation:blink 1.6s infinite}
+  @keyframes blink{50%{opacity:.25}}
+  /* Controls */
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px;box-shadow:var(--shadow)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  @media(max-width:640px){.grid2{grid-template-columns:1fr}}
+  label.lbl{font-size:12px;color:var(--mut);display:block;margin:0 0 6px;text-transform:uppercase;letter-spacing:.6px}
+  select, input[type=text]{width:100%;background:rgba(0,0,0,.4);color:var(--txt);border:1px solid var(--line);border-radius:12px;padding:11px 12px;font-size:14.5px;outline:none}
+  select:focus,input:focus{border-color:var(--acc2)}
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .seg{display:flex;background:rgba(0,0,0,.35);border:1px solid var(--line);border-radius:12px;padding:4px;gap:4px;flex-wrap:wrap}
+  .seg button{border:none;background:transparent;color:var(--mut);padding:8px 12px;border-radius:9px;font-size:13px;cursor:pointer;transition:all .2s}
+  .seg button.on{background:linear-gradient(135deg,#6c7bff,#22d3ee);color:#fff;font-weight:700;box-shadow:0 4px 14px rgba(108,123,255,.4)}
+  .switch{display:flex;align-items:center;gap:9px;font-size:13.5px;color:var(--txt);cursor:pointer;user-select:none}
+  .sw{width:44px;height:25px;border-radius:99px;background:rgba(255,255,255,.15);position:relative;transition:.25s;flex:none}
+  .sw::after{content:"";position:absolute;width:19px;height:19px;border-radius:50%;background:#fff;top:3px;left:3px;transition:.25s}
+  .switch.on .sw{background:linear-gradient(135deg,#6c7bff,#22d3ee)}
+  .switch.on .sw::after{left:22px}
+  .hint{font-size:12.5px;color:var(--mut);line-height:1.55}
+  /* Days */
+  .days{display:flex;gap:8px;overflow-x:auto;padding:12px 2px;scrollbar-width:none}
+  .day{flex:1;min-width:118px;border:1px solid var(--line);background:var(--card);border-radius:14px;padding:10px;cursor:pointer;text-align:center;transition:.2s}
+  .day:hover{transform:translateY(-2px)}
+  .day.on{background:linear-gradient(135deg,rgba(108,123,255,.5),rgba(34,211,238,.35));border-color:var(--acc2);box-shadow:0 8px 22px rgba(108,123,255,.35)}
+  .day b{display:block;font-size:14px}
+  .day span{font-size:12px;color:var(--mut)}
+  .day.today{outline:2px dashed rgba(52,211,153,.6);outline-offset:2px}
+  /* Schedule */
+  .stat{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0}
+  .stat div{flex:1;min-width:140px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:11px 13px}
+  .stat b{font-size:20px;display:block}
+  .stat span{font-size:12px;color:var(--mut)}
+  .daySec{margin:16px 0}
+  .dayHead{display:flex;align-items:center;gap:10px;margin:0 0 10px}
+  .dayHead h3{margin:0;font-size:17px}
+  .dayHead .date{font-size:12.5px;color:var(--mut);background:rgba(0,0,0,.35);border:1px solid var(--line);padding:4px 10px;border-radius:99px}
+  .dayHead .cnt{margin-left:auto;font-size:12px;color:var(--mut)}
+  .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px}
+  .card{border:1px solid var(--line);border-radius:15px;padding:12px 12px 11px;background:linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,.03));
+    position:relative;overflow:hidden;animation:pop .5s backwards}
+  @keyframes pop{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+  .card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:linear-gradient(180deg,var(--acc),var(--acc2))}
+  .card.ausfall::before{background:linear-gradient(180deg,#fb7185,#f43f5e)}
+  .card.ausfall{background:linear-gradient(180deg,rgba(251,113,133,.16),rgba(251,113,133,.05))}
+  .card .time{font-size:12px;color:var(--mut);display:flex;align-items:center;gap:6px}
+  .card .time b{color:var(--txt);font-size:13.5px}
+  .card .subj{font-size:21px;font-weight:800;margin:4px 0 7px;letter-spacing:.2px}
+  .card.ausfall .subj{color:#fecdd3;text-decoration:line-through wavy rgba(251,113,133,.7)}
+  .chips{display:flex;gap:6px;flex-wrap:wrap}
+  .chip{font-size:12px;padding:5px 9px;border-radius:99px;background:rgba(0,0,0,.4);border:1px solid var(--line)}
+  .chip.t{border-color:rgba(34,211,238,.4)}
+  .chip.r{border-color:rgba(167,139,250,.45)}
+  .badge{position:absolute;top:10px;right:10px;font-size:11px;font-weight:800;padding:4px 9px;border-radius:99px}
+  .badge.free{background:rgba(251,113,133,.22);color:#fecdd3;border:1px solid rgba(251,113,133,.5);animation:blink 1.4s infinite}
+  .badge.std{background:rgba(52,211,153,.16);color:#a7f3d0;border:1px solid rgba(52,211,153,.4)}
+  .empty{padding:22px;text-align:center;color:var(--mut);border:1px dashed var(--line);border-radius:14px;font-size:14px}
+  /* skeleton */
+  .skel{border-radius:15px;border:1px solid var(--line);padding:14px;background:var(--card);overflow:hidden;position:relative;min-height:110px}
+  .skel::after{content:"";position:absolute;inset:0;background:linear-gradient(100deg,transparent 30%,rgba(255,255,255,.09) 50%,transparent 70%);animation:sh 1.3s infinite}
+  @keyframes sh{from{transform:translateX(-100%)}to{transform:translateX(100%)}}
+  /* Pausen, Jetzt-Banner, Handy-Navi, Install-Hilfe */
+  .pauseRow{display:flex;align-items:center;gap:8px;margin:0 10px;padding:7px 12px;font-size:12.5px;color:var(--mut);border-left:2px dashed rgba(255,255,255,.3)}
+  .pauseRow b{color:#fde68a;font-variant-numeric:tabular-nums}
+  #nowBar{margin:12px 0 0;padding:13px 15px;border-radius:16px;border:1px solid rgba(52,211,153,.45);background:linear-gradient(135deg,rgba(52,211,153,.16),rgba(34,211,238,.1));box-shadow:var(--shadow);font-size:14px;line-height:1.5}
+  #nowBar.pause{border-color:rgba(251,191,36,.5);background:linear-gradient(135deg,rgba(251,191,36,.15),rgba(251,113,133,.08))}
+  #nowBar.done{border-color:var(--line);background:var(--card);color:var(--mut)}
+  .nowProg{height:7px;border-radius:99px;background:rgba(0,0,0,.45);overflow:hidden;margin-top:9px}
+  .nowProg i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--ok),var(--acc2));transition:width 1s linear}
+  #mnav{display:none}
+  @media(max-width:640px){
+    #mnav{display:flex;position:fixed;bottom:0;left:0;right:0;z-index:40;gap:6px;padding:10px 10px calc(10px + env(safe-area-inset-bottom));background:rgba(7,11,22,.92);backdrop-filter:blur(14px);border-top:1px solid var(--line)}
+    #mnav button{flex:1;border:1px solid var(--line);background:var(--card);color:var(--txt);border-radius:12px;padding:12px 2px;font-size:12.5px;min-height:48px;cursor:pointer}
+    #mnav button.on{background:linear-gradient(135deg,#6c7bff,#22d3ee);font-weight:700;border:none}
+    .wrap{padding-bottom:170px}
+    .seg button{min-height:44px}
+    .day{min-width:104px;min-height:66px}
+    .btn{min-height:44px}
+  }
+  /* toast */
+  #toasts{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);z-index:60;display:flex;flex-direction:column;gap:8px;width:min(480px,94vw)}
+  .toast{background:rgba(10,15,30,.95);border:1px solid var(--acc2);border-radius:14px;padding:12px 14px;font-size:13.5px;box-shadow:var(--shadow);
+    animation:tin .35s cubic-bezier(.2,.9,.3,1.2)}
+  .toast.warn{border-color:var(--warn)} .toast.bad{border-color:var(--bad)} .toast.ok{border-color:var(--ok)}
+  @keyframes tin{from{opacity:0;transform:translateY(16px) scale(.96)}}
+  footer{margin-top:26px;color:var(--mut);font-size:12.5px;line-height:1.7;text-align:center}
+  footer a{color:#a5b4ff}
+  .kbd{background:rgba(255,255,255,.1);border:1px solid var(--line);border-radius:6px;padding:1px 7px;font-size:12px}
+</style>
+
+<div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
+
+<div id="loader">
+  <div class="loadCard">
+    <div class="rings"><span></span><span></span><span></span><b>📚</b></div>
+    <h2 style="margin:0 0 4px">Pierer Plan</h2>
+    <div style="color:var(--mut);font-size:13px;margin-bottom:6px">Johann-Friedrich-Pierer-Schule · Altenburg</div>
+    <div class="loadBar"><i id="loadFill"></i></div>
+    <div id="loadStep">Starte …</div>
+    <div id="loadSub" style="color:var(--mut);font-size:12.5px;margin-top:6px;min-height:18px"></div>
+    <div id="loadExtra" hidden style="margin-top:12px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+      <button class="btn small primary" id="retryBtn">↻ Erneut versuchen</button>
+      <a class="btn small" id="loadOrigLink" href="https://www.pierer-schule.de/vertretungsplan/stundenplan.html" target="_blank" rel="noopener">📄 Original öffnen</a>
+    </div>
+  </div>
+</div>
+
+<header class="top"><div class="inner">
+  <div class="logo">P</div>
+  <div class="t">
+    <h1>Pierer <span class="grad">Plan</span></h1>
+    <p>Johann-Friedrich-Pierer-Schule · 04600 Altenburg</p>
+  </div>
+  <div class="sp"></div>
+  <a class="btn small" id="schoolBtn" href="https://www.pierer-schule.de/" target="_blank" rel="noopener">🏫 Schulwebsite</a>
+  <a class="btn small" id="origBtn" href="https://www.pierer-schule.de/vertretungsplan/stundenplan.html" target="_blank" rel="noopener">📄 Original-Übersicht</a>
+  <button class="btn small primary" id="notifyBtn">🔔 Nachrichten an</button>
+</div></header>
+
+<div class="wrap">
+
+  <div class="hero">
+    <h2>Dein Vertretungsplan, <span style="background:linear-gradient(90deg,#67e8f9,#a5b4ff);-webkit-background-clip:text;background-clip:text;color:transparent">automatisch aktuell.</span></h2>
+    <div class="pills">
+      <span class="pill live"><span class="dot"></span><span id="liveTxt">verbinde …</span></span>
+      <span class="pill" id="planPill">📅 Plan: –</span>
+      <span class="pill" id="printPill">🖨 gedruckt: –</span>
+      <span class="pill" id="classPill">🎒 BVJ 26.1</span>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="grid2">
+      <div>
+        <label class="lbl">Wochen-Plan (neuester ist vorausgewählt)</label>
+        <select id="planSel"></select>
+      </div>
+      <div>
+        <label class="lbl">Meine Klasse</label>
+        <select id="classSel"></select>
+      </div>
+    </div>
+    <div class="row" style="margin-top:12px">
+      <div class="seg" id="daySeg" style="flex:1"></div>
+    </div>
+    <div class="row" style="margin-top:12px;justify-content:space-between">
+      <div class="switch on" id="autoSw"><div class="sw"></div><span>🔄 Immer neuesten Plan öffnen <b>(Auto)</b></span></div>
+      <div class="row">
+        <button class="btn small" id="todayBtn">📍 Heute</button>
+        <button class="btn small" id="reloadBtn">↻ Neu laden</button>
+        <button class="btn small" id="pdfBtn">⬇ PDF öffnen</button>
+      </div>
+    </div>
+    <div class="hint" id="statusLine" style="margin-top:10px">Bereit …</div>
+  </div>
+
+  <div class="stat">
+    <div><b id="stToday">–</b><span id="stTodaySub">Heute</span></div>
+    <div><b id="stTom">–</b><span id="stTomSub">Morgen</span></div>
+    <div><b id="stFree">–</b><span>Entfall diese Woche (deine Klasse)</span></div>
+    <div><b id="stUpd">–</b><span>Letzte Prüfung</span></div>
+  </div>
+
+  <div id="nowBar" hidden></div>
+
+  <div id="schedule"></div>
+
+  <footer>
+    Daten: <a href="https://www.pierer-schule.de/vertretungsplan/stundenplan.html" target="_blank" rel="noopener">pierer-schule.de/vertretungsplan</a> ·
+    <a href="https://www.pierer-schule.de/" target="_blank" rel="noopener">Schulwebsite</a>
+  </footer>
+</div>
+
+<nav id="mnav">
+  <button data-m="auto">✨ Auto</button>
+  <button data-m="home">📍 Jetzt</button>
+  <button data-m="all">Alle</button>
+  <button data-m="reload">↻ Neu</button>
+</nav>
+
+<div id="toasts"></div>
+
+<script type="module">
+const $ = id => document.getElementById(id);
+const SCHEDULE_INDEX = "https://www.pierer-schule.de/vertretungsplan/stundenplan.html";
+const PDF_BASE = "https://www.pierer-schule.de";
+const CHECK_MS = 120000;
+
+const S = {
+  plans: [], cur: null, pagesCache: null, pdfBytes: null,
+  className: localStorage.getItem("pierer_class") || "BVJ26/1",
+  auto: localStorage.getItem("pierer_auto") !== "0",
+  dayFilter: "auto", weekDates: [], gedruckt: "", lastCheck: null, lastKey: "",
+  firstLoad: true, timer: null
+};
+
+function step(txt, pct){
+  $("loadStep").textContent = txt;
+  if(pct!=null) $("loadFill").style.width = pct+"%";
+}
+function toast(msg, kind=""){
+  const d = document.createElement("div");
+  d.className = "toast "+kind; d.innerHTML = msg;
+  $("toasts").appendChild(d);
+  setTimeout(()=>{ d.style.transition="all .4s"; d.style.opacity="0"; d.style.transform="translateY(8px)"; setTimeout(()=>d.remove(),400); }, 6500);
+  while($("toasts").children.length>3) $("toasts").firstChild.remove();
+}
+function beep(){
+  try{
+    const ctx = new (window.AudioContext||window.webkitAudioContext)();
+    [660,880,990].forEach((f,i)=>{ const o=ctx.createOscillator(), g=ctx.createGain();
+      o.type="sine"; o.frequency.value=f; g.gain.value=.12;
+      o.connect(g); g.connect(ctx.destination);
+      o.start(ctx.currentTime+i*.12); o.stop(ctx.currentTime+i*.12+.18); });
+  }catch(e){}
+}
+function fetchWithTimeout(promiseFn, ms, label){
+  const job = promiseFn();
+  const timer = new Promise((_,rej)=>setTimeout(()=>rej(new Error("Zeitüberschreitung ("+Math.round(ms/1000)+" s) – "+label)),ms));
+  return Promise.race([job,timer]);
+}
+async function sfetch(url, as="text", ms=15000){
+  // STANDALONE (Datei/APK): Perchance-Fetch-Proxy direkt, ohne Engine-Import.
+  const GENID = "g5jrq8w3k7";
+  const errs = [];
+  const read = (r)=> as==="text" ? r.text() : r.arrayBuffer();
+  const proxied = "https://fetch-plugin.perchance.org/proxy1/"+encodeURIComponent(url)+"?origin="+encodeURIComponent("https://null.perchance.org")+"&generator="+GENID;
+  const seq = [
+    [proxied, "Schulserver via Proxy", ms],
+    [url, "direkt", 10000],
+    ["https://api.allorigins.win/raw?url="+encodeURIComponent(url), "Bruecke allorigins", 12000],
+    ["https://api.codetabs.com/v1/proxy?quest="+encodeURIComponent(url), "Bruecke codetabs", 12000],
+    ["https://api.cors.lol/?url="+encodeURIComponent(url), "Bruecke cors.lol", 12000]
+  ];
+  for(const entry of seq){
+    const u = entry[0], label = entry[1], t = entry[2];
+    try{
+      return await fetchWithTimeout(async()=>{
+        const r = await fetch(u, {cache:"no-store"});
+        if(!r.ok) throw new Error("HTTP "+r.status+" ("+label+")");
+        return read(r);
+      }, t, "keine Antwort ("+label+")");
+    }catch(e){ errs.push(e.message); }
+  }
+  throw new Error(errs.join(" · ") || "keine Verbindung");
+}
+let __pdfjsPromise = null;
+function loadPdfjs(){
+  if(__pdfjsPromise) return __pdfjsPromise;
+  const builds = [
+    ["https://esm.sh/pdfjs-dist@4.2.67/legacy/build/pdf.mjs","https://esm.sh/pdfjs-dist@4.2.67/legacy/build/pdf.worker.mjs"],
+    ["https://cdn.jsdelivr.net/npm/pdfjs-dist@4.2.67/legacy/build/pdf.mjs","https://cdn.jsdelivr.net/npm/pdfjs-dist@4.2.67/legacy/build/pdf.worker.mjs"],
+    ["https://unpkg.com/pdfjs-dist@4.2.67/legacy/build/pdf.mjs","https://unpkg.com/pdfjs-dist@4.2.67/legacy/build/pdf.worker.mjs"]
+  ];
+  __pdfjsPromise = (async()=>{
+    let lastErr = null;
+    for(const [lib, worker] of builds){
+      try{
+        const pdfjs = await import(lib);
+        try{ pdfjs.GlobalWorkerOptions.workerSrc = worker; }catch(e){}
+        return pdfjs;
+      }catch(e){ lastErr = e; }
+    }
+    throw new Error("PDF-Lese-Modul konnte nicht geladen werden ("+(lastErr&&lastErr.message||"Netzwerk blockiert")+") – evtl. blockiert WLAN/Adblocker cdn.jsdelivr/esm.sh. Bitte Adblocker/VPN ausmachen und neu laden.");
+  })();
+  return __pdfjsPromise;
+}
+let bootT0 = 0, slowTimer = null;
+function startSlowNotice(){
+  bootT0 = Date.now();
+  clearInterval(slowTimer);
+  const sub = $("loadSub"), extra = $("loadExtra");
+  slowTimer = setInterval(()=>{
+    if($("loader").classList.contains("hide")){ clearInterval(slowTimer); return; }
+    const s = Math.round((Date.now()-bootT0)/1000);
+    if(s>=6){
+      sub.textContent = "Dauert "+s+" s – langsames Netz oder blockierter Server? Warte noch …";
+      extra.hidden = false;
+    }
+  }, 1000);
+  const rb = $("retryBtn");
+  if(rb && !rb.__wired){ rb.__wired = true; rb.onclick = ()=>location.reload(); }
+}
+function stopSlowNotice(){ clearInterval(slowTimer); const s=$("loadSub"); if(s) s.textContent=""; const e=$("loadExtra"); if(e) e.hidden=true; }
+// Offline-Cache: zuletzt geladener Plan wird lokal gespeichert und bei
+// fehlendem Internet sofort angezeigt (Stand-Datum wird genannt).
+const Cache = {
+  load(){ try{ return JSON.parse(localStorage.getItem("pierer_cache")||"null"); }catch(e){ return null; } },
+  save(o){ try{ localStorage.setItem("pierer_cache", JSON.stringify(o)); }catch(e){} }
+};
+function b64encode(buf){ const b=new Uint8Array(buf); let s=""; for(let i=0;i<b.length;i+=8192) s+=String.fromCharCode.apply(null,b.subarray(i,i+8192)); return btoa(s); }
+function b64decode(s){ const bin=atob(s); const b=new Uint8Array(bin.length); for(let i=0;i<bin.length;i++) b[i]=bin.charCodeAt(i); return b.buffer; }
+function parseDdMmYy(s){
+  const m = s.match(/(\d{2})(\d{2})(\d{2})/);
+  if(!m) return null;
+  return new Date(2000+ +m[3], +m[2]-1, +m[1]);
+}
+function fmtD(d){ return d ? d.toLocaleDateString("de-DE",{day:"2-digit",month:"2-digit",year:"numeric"}) : "–"; }
+function fmtT(d){ return d ? d.toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"}) : "–"; }
+
+async function loadPlanList(){
+  step("Verbinde mit pierer-schule.de …", 18);
+  const html = await sfetch(SCHEDULE_INDEX, "text");
+  const doc = new DOMParser().parseFromString(html, "text/html");
+  const links = [...doc.querySelectorAll('a[href*="Vertretungsplaene/v"], a[href*="vertretungsplaene/v"], a[href*="/v"]')]
+    .concat([...doc.querySelectorAll("a")].filter(a=>/v\d{6}\.pdf/i.test(a.getAttribute("href")||"")));
+  const seen = new Map();
+  for(const a of links){
+    let href = a.getAttribute("href")||"";
+    if(!/v\d{6}\.pdf/i.test(href)) continue;
+    if(!/^https?:/.test(href)) href = PDF_BASE + (href.startsWith("/")?"":"/vertretungsplan/Vertretungsplaene/") + href;
+    const label = (a.textContent||"").trim() || href.split("/").pop();
+    if(!/klassenplan/i.test(label) && !/v\d{6}/i.test(label)) continue;
+    const m = href.match(/v(\d{6})\.pdf/i);
+    const dt = m ? parseDdMmYy(m[1]) : null;
+    if(!seen.has(href)) seen.set(href, {url:href, label, date:dt, file:m?m[0]:""});
+  }
+  let plans = [...seen.values()];
+  // Fallback: Links direkt aus HTML per Regex (falls DOM-Parsing klemmt)
+  if(!plans.length){
+    const re = /href="([^"]*?v(\d{6})\.pdf)"/gi; let mm;
+    while((mm=re.exec(html))){ let h=mm[1]; if(!/^https?:/.test(h)) h=PDF_BASE+h;
+      plans.push({url:h,label:"Klassenplan ab "+mm[2].slice(0,2)+"."+mm[2].slice(2,4)+".20"+mm[2].slice(4),date:parseDdMmYy(mm[2]),file:"v"+mm[2]+".pdf"}); }
+  }
+  plans = plans.filter(p=>p.date).sort((a,b)=>b.date-a.date);
+  if(!plans.length) throw new Error("Keine Klassenplan-PDFs in der Übersicht gefunden.");
+  S.plans = plans;
+}
+
+async function loadPdf(plan, silent=false){
+  S.cur = plan;
+  S.offline = false;
+  if(!silent){ step("Lade neuesten Plan: "+plan.label+" …", 45); skeleton(); }
+  step("Lade Plan-PDF: "+plan.label+" …", 45);
+  if(!silent) skeleton();
+  const buf = await sfetch(plan.url, "buf", 30000);
+  await loadPdfFromBytes(buf, plan, silent);
+}
+async function loadPdfFromBytes(buf, plan, silent=false){
+  S.cur = plan;
+  S.pdfBytes = buf;
+  step("Lese PDF aus (deine Klasse wird gefiltert) …", 66);
+  step("Lese PDF aus (deine Klasse wird gefiltert) …", 66);
+  const pdfjs = await loadPdfjs();
+  const bytes = new Uint8Array(buf);
+  const pdf = await pdfjs.getDocument({data: bytes.slice()}).promise;
+  const pages = [];
+  const allText = [];
+  for(let p=1;p<=pdf.numPages;p++){
+    const page = await pdf.getPage(p);
+    const tc = await page.getTextContent();
+    pages.push(tc.items.map(it=>({str:it.str, x:it.transform[4], y:it.transform[5]})));
+    allText.push(tc.items.map(i=>i.str).join(" "));
+  }
+  S.pagesCache = pages;
+  const joined = allText.join(" ");
+  const dm = joined.match(/gedruckt:\s*(\d{2}\.\d{2}\.\d{4});?\s*(\d{1,2}:\d{2})?/i);
+  S.gedruckt = dm ? dm[0].replace(/\s+/g," ") : "";
+  // Wochen-Daten: Montag aus dem Dateinamen (vDDMMYY = Montag "ab ...") +0..4 – das ist verlässlich.
+  // Fallback: Datumsbereich aus dem PDF-Text (ohne Druckdatum).
+  let week = [];
+  if(plan.date){
+    for(let i=0;i<5;i++) week.push(new Date(plan.date.getFullYear(),plan.date.getMonth(),plan.date.getDate()+i));
+  } else {
+    const g = (S.gedruckt.match(/(\d{2})\.(\d{2})\.(\d{4})/)||[]).slice(1).join(".");
+    const dates = [...new Set((joined.match(/\d{2}\.\d{2}\.\d{4}/g)||[]))].filter(s=>s!==g)
+      .map(s=>{ const[a,b,c]=s.split(".").map(Number); return new Date(c,b-1,a); }).sort((a,b)=>a-b);
+    if(dates.length){ const start = dates[0]; for(let i=0;i<5;i++) week.push(new Date(start.getFullYear(),start.getMonth(),start.getDate()+i)); }
+  }
+  S.weekDates = week;
+  if(!silent) step("Baue Stundenansicht für "+S.className+" …", 85);
+  buildClassSelect(pages);
+  S.pdfBytes = bytes.buffer;
+  try{
+    const b64 = b64encode(bytes.buffer);
+    // localStorage hat ~5 MB – nur speichern wenn es passt, sonst still überspringen
+    if(b64.length < 3800000) Cache.save({plans:S.plans, curUrl:plan.url, pdfB64:b64, gedruckt:S.gedruckt, savedAt:Date.now()});
+  }catch(e){ console.warn("cache save failed", e); }
+  render(true);
+}
+
+function allClassLabels(){
+  const out = [];
+  (S.pagesCache||[]).forEach((items,pi)=>{
+    for(const it of items){
+      const s = (it.str||"").trim();
+      if(it.x<60 && /^(BVJ|BVJS|BFSE|BFSM|ZM|EEG|MAF|BG|FOS|HBFS)/.test(s) && !out.find(o=>o.name===s)) out.push({name:s, page:pi, y:it.y});
+    }
+  });
+  const order = ["BVJ","BVJS","BFSE","BFSM","ZM","EEG","MAF"];
+  out.sort((a,b)=> order.findIndex(o=>a.name.startsWith(o)) - order.findIndex(o=>b.name.startsWith(o)) || (a.name<b.name?-1:1));
+  return out;
+}
+function entryCount(name){
+  const pos = findClassPos(name);
+  if(!pos) return -1;
+  const items = S.pagesCache[pos.page], y0 = pos.y;
+  let n = 0;
+  for(const it of items){
+    const s = (it.str||"").trim();
+    if(it.x>55 && s!=="" && it.y>y0-16 && it.y<y0-2) n++;
+  }
+  return n;
+}
+function buildClassSelect(){
+  const sel = $("classSel"); const labels = allClassLabels();
+  if(!labels.length) return;
+  if(!labels.find(l=>l.name===S.className)){
+    // "BVJ 26.1" / "BVJ 1" tolerant mappen
+    const norm = S.className.toUpperCase().replace(/[^A-Z0-9/*]/g,"");
+    const hit = labels.find(l=>l.name.replace(/[^A-Z0-9/*]/g,"")===norm)
+      || labels.find(l=>l.name==="BVJ26/1");
+    S.className = hit ? hit.name : labels[0].name;
+  }
+  sel.innerHTML = "";
+  const counts = {};
+  for(const l of labels){
+    const o = document.createElement("option");
+    const c = counts[l.name] = entryCount(l.name);
+    o.value = l.name;
+    o.textContent = l.name.replace("**"," (3. Gruppe)").replace("*"," (2. Gruppe)") + (/\*$/.test(l.name)?"":" (1. Gruppe)") + (c===0?" – diese Woche leer":"");
+    if(l.name===S.className) o.selected = true;
+    sel.appendChild(o);
+  }
+  const ps = $("planSel"); ps.innerHTML = "";
+  S.plans.forEach((p,i)=>{
+    const o = document.createElement("option");
+    o.value = p.url;
+    o.textContent = (i===0?"⭐ ":"") + p.label + "  •  " + fmtD(p.date);
+    if(S.cur && p.url===S.cur.url) o.selected = true;
+    ps.appendChild(o);
+  });
+  $("planPill").textContent = "📅 " + (S.cur? S.cur.label + " • " + fmtD(S.cur.date) : "–");
+  $("printPill").textContent = "🖨 " + (S.gedruckt || "–");
+  $("classPill").textContent = "🎒 " + S.className + (S.className==="BVJ26/1"?" = BVJ 26.1":"");
+}
+
+function findClassPos(name){
+  for(let pi=0; pi<S.pagesCache.length; pi++){
+    const items = S.pagesCache[pi];
+    const lab = items.find(it=>(it.str||"").trim()===name && it.x<60);
+    if(lab) return {page:pi, y:lab.y};
+  }
+  return null;
+}
+function extractSchedule(name){
+  const pos = findClassPos(name);
+  if(!pos) return null;
+  const items = S.pagesCache[pos.page];
+  const y0 = pos.y;
+  // Tagesköpfe (Mo..Fr, y klein)
+  const days = items.filter(i=>/^(Mo|Di|Mi|Do|Fr)$/.test((i.str||"").trim()) && i.y<40)
+    .sort((a,b)=>a.x-b.x).map(d=>({n:d.str.trim(), x:d.x}));
+  if(!days.length) return null;
+  // Zeiten (y klein)
+  const times = items.filter(i=>/^\d{1,2}:\d{2}$/.test((i.str||"").trim()) && i.y<40)
+    .sort((a,b)=>a.x-b.x).map(t=>({t:t.str.trim(), x:t.x}));
+  // Zellen: y-Band um Klassen-Label
+  const cell = items.filter(i=>i.x>55 && i.y>y0-16 && i.y<y0+42);
+  const dayOf = x => { let d = days[0].n; for(const dd of days) if(x>=dd.x-12) d=dd.n; return d; };
+  const sched = {};
+  days.forEach(d=>sched[d.n]=[]);
+  // Zeiten je Tag gruppieren: Zeit gehört zu Tag mit größtem day.x <= time.x
+  const timesByDay = {}; days.forEach(d=>timesByDay[d.n]=[]);
+  for(const t of times) timesByDay[dayOf(t.x)].push(t);
+  for(const dn of Object.keys(timesByDay)){
+    for(const t of timesByDay[dn]){
+      const near = cell.filter(c=>Math.abs(c.x-t.x)<=5);
+      const subj = near.filter(c=>c.y>y0-16&&c.y<y0-1).sort((a,b)=>Math.abs(a.y-(y0-8))-Math.abs(b.y-(y0-8)))[0];
+      const teach = near.filter(c=>c.y>=y0+1&&c.y<y0+20).sort((a,b)=>Math.abs(a.y-(y0+9))-Math.abs(b.y-(y0+9)))[0];
+      const room = near.filter(c=>c.y>=y0+20&&c.y<y0+42).sort((a,b)=>Math.abs(a.y-(y0+29))-Math.abs(b.y-(y0+29)))[0];
+      const s=(subj?subj.str:"").trim(), l=(teach?teach.str:"").trim(), r=(room?room.str:"").trim();
+      if(!s && !l && !r) continue;
+      const isFree = (s==="-"||s===""||s==="–");
+      sched[dn].push({time:t.t, subj:isFree?"Entfall":s, teacher:isFree?"–":(l||"–"), room:isFree?"–":(r||"–"), free:isFree, x:t.x});
+    }
+    sched[dn].sort((a,b)=>a.x-b.x);
+  }
+  return {sched, days:days.map(d=>d.n)};
+}
+
+// Stunden-Raster: 45-Minuten-Stunden (passt exakt auf die Startzeiten im Plan)
+const LESSON_END = {"7:30":"8:15","8:20":"9:05","9:25":"10:10","10:15":"11:00","11:05":"11:50","12:20":"13:05","13:10":"13:55","14:00":"14:45","14:50":"15:35","15:40":"16:25"};
+function endOf(t){ if(LESSON_END[t]) return LESSON_END[t]; const p=t.split(":"); const d=new Date(2000,0,1,+p[0],+p[1]+45); return d.getHours()+":"+String(d.getMinutes()).padStart(2,"0"); }
+function toMin(t){ const p=t.split(":"); return (+p[0])*60+(+p[1]); }
+function pauseLabel(gap){ return gap>=25 ? "🍽 Mittagspause" : gap>=12 ? "☕ große Pause" : "↔ Wechselpause"; }
+function dayDate(n){
+  const i = ["Mo","Di","Mi","Do","Fr"].indexOf(n);
+  return (S.weekDates[i]||null);
+}
+function todayKey(){
+  const n = new Date(); const dn = ["So","Mo","Di","Mi","Do","Fr","Sa"][n.getDay()];
+  return ["Mo","Di","Mi","Do","Fr"].includes(dn)?dn:null;
+}
+function skeleton(){
+  $("schedule").innerHTML = ["Mo","Di","Mi","Do","Fr"].map(d=>
+    `<div class="daySec"><div class="dayHead"><h3>${d}</h3></div><div class="cards">${"<div class='skel'></div>".repeat(4)}</div></div>`).join("");
+}
+function inWeek(){
+  const now = new Date();
+  return S.weekDates.some(w=>w.toDateString()===now.toDateString());
+}
+function buildDaySeg(days){
+  const seg = $("daySeg"); seg.innerHTML="";
+  const mk = (v,l)=>{ const b=document.createElement("button"); b.textContent=l; b.dataset.v=v; if(S.dayFilter===v)b.classList.add("on");
+    b.onclick=()=>{ S.dayFilter=v; buildDaySeg(days); render(false); }; return b; };
+  seg.appendChild(mk("auto","✨ Auto (Mitte: Datum)"));
+  seg.appendChild(mk("all","Alle"));
+  const tk = todayKey(), iw = inWeek();
+  days.forEach(d=>{
+    const dt = dayDate(d);
+    const b = mk(d, d+(dt?" "+dt.toLocaleDateString("de-DE",{day:"2-digit",month:"2-digit"}):""));
+    if(iw && tk===d){ b.classList.add("today"); b.title="Heute"; }
+    seg.appendChild(b);
+  });
+  if(tk && iw) seg.appendChild(mk("today","📍 Heute"));
+  if(tk && iw) seg.appendChild(mk("tom","➡ Morgen"));
+}
+function visibleDays(all){
+  if(S.dayFilter==="all") return all;
+  if(S.dayFilter==="today"){ const t=todayKey(); return t?[t]:[all[0]]; }
+  if(S.dayFilter==="tom"){ const t=todayKey(); const i=all.indexOf(t); return [all[Math.min(all.length-1,(i<0?0:i+1))]]; }
+  if(["Mo","Di","Mi","Do","Fr"].includes(S.dayFilter)) return [S.dayFilter];
+  // auto: Ist heute in dieser Planwoche → heutiger Tag, sonst die Mitte (Mi) – "Plan in der Mitte, Datum steht drauf"
+  const t = todayKey();
+  if(inWeek() && t) return [t];
+  return ["Mi"];
+}
+
+function render(announce){
+  const data = extractSchedule(S.className);
+  if(!data || !data.days.length){ $("schedule").innerHTML = `<div class="empty">Klasse <b>${S.className}</b> in diesem Plan nicht gefunden. Wähle oben eine andere Klasse.</div>`; return; }
+  const totalEntries = data.days.reduce((a,d)=>a+data.sched[d].length,0);
+  if(totalEntries===0){
+    const base = S.className.replace(/\*+$/,"");
+    $("schedule").innerHTML = `<div class="empty" style="padding:34px 20px">
+      <div style="font-size:42px;margin-bottom:10px">🏖️</div>
+      <b>Für ${escapeH(S.className)} stehen in dieser Woche keine Stunden im Plan.</b><br>
+      <span>Entweder hat diese Gruppe frei (z.&nbsp;B. Praktikum) oder der Plan listet sie diesmal nicht – schau zur Sicherheit ins PDF-Original.</span>
+      <div class="row" style="justify-content:center;margin-top:14px">
+        ${base!==S.className?`<button class="btn small primary" id="gotoBase">➡ ${escapeH(base)} (1. Gruppe) ansehen</button>`:""}
+        <button class="btn small" id="gotoPdf">⬇ PDF-Original öffnen</button>
+      </div></div>`;
+    if(base!==S.className){ const gb=$("gotoBase"); if(gb) gb.onclick=()=>{ S.className=base; localStorage.setItem("pierer_class",base); buildClassSelect(); render(false); }; }
+    const gp=$("gotoPdf"); if(gp) gp.onclick=()=>window.open(S.cur.url,"_blank");
+    $("statusLine").innerHTML = `Plan <b>${S.cur.label}</b> (${fmtD(S.cur.date)}) · Klasse <b>${S.className}</b> ist diese Woche leer.`;
+    if(S.firstLoad){ S.firstLoad=false; $("loader").classList.add("hide"); }
+    return;
+  }
+  buildDaySeg(data.days);
+  const show = visibleDays(data.days);
+  const tk = todayKey(), iw = inWeek();
+  const isTodayCol = d => { const w = dayDate(d); return iw && w && w.toDateString()===new Date().toDateString(); };
+  const order = ["Mo","Di","Mi","Do","Fr"].filter(d=>data.days.includes(d));
+  let free=0, tot=0;
+  order.forEach(d=>data.sched[d].forEach(e=>{ tot++; if(e.free) free++; }));
+  const tEnt = (iw&&tk)?data.sched[tk].filter(e=>e.free).length:0;
+  if(iw && tk){
+    $("stToday").textContent = data.sched[tk].length+" Std.";
+    $("stTodaySub").textContent = "Heute ("+tk+" "+fmtD(dayDate(tk))+(tEnt?` · ${tEnt} Entfall`:"")+")";
+  } else {
+    $("stToday").textContent = "–";
+    $("stTodaySub").textContent = "Heute nicht in dieser Woche ("+fmtD(S.weekDates[0])+"–"+fmtD(S.weekDates[4])+"), Mitte gezeigt";
+  }
+  const ti = order.indexOf(tk);
+  const mor = (iw && ti>=0)?order[Math.min(order.length-1,ti+1)]:null;
+  if(mor){
+    $("stTom").textContent = data.sched[mor].length+" Std.";
+    $("stTomSub").textContent = "Morgen ("+mor+" "+fmtD(dayDate(mor))+")";
+  } else {
+    $("stTom").textContent = data.sched["Mo"] ? data.sched["Mo"].length+" Std." : "–";
+    $("stTomSub").textContent = "Wochenstart Mo "+fmtD(dayDate("Mo"));
+  }
+  $("stFree").textContent = free+" / "+tot;
+  $("stUpd").textContent = fmtT(S.lastCheck||new Date());
+  $("statusLine").innerHTML = `Plan <b>${S.cur.label}</b> (${fmtD(S.cur.date)}) · ${S.gedruckt||"ohne Druckstempel"} · Klasse <b>${S.className}</b> · Tage: ${show.join(", ")}`;
+  $("liveTxt").textContent = S.offline && S.offlineSince ? ("offline · Stand "+fmtD(new Date(S.offlineSince))+" "+fmtT(new Date(S.offlineSince))) : "live · prüft alle 2 Min.";
+  let html = "";
+  for(const d of order){
+    if(!show.includes(d)) continue;
+    const dt = dayDate(d);
+    const list = data.sched[d];
+    html += `<div class="daySec"><div class="dayHead"><h3>${isTodayCol(d)?"📍 ":""}${d} ${isTodayCol(d)?'<span class="date">HEUTE</span>':""}</h3>
+      <span class="date">🗓 ${dt?fmtD(dt):"–"} ${d==="Mi"&&!iw?"· Mitte":""}</span>
+      <span class="cnt">${list.length} Stunden · ${list.filter(e=>e.free).length} Entfall</span></div><div class="cards">`;
+    if(!list.length) html += `<div class="empty">Keine Einträge.</div>`;
+    list.forEach((e,i)=>{
+      const sub = e.free ? "Entfall" : e.subj;
+      html += `<div class="card ${e.free?"ausfall":""}" style="animation-delay:${Math.min(i*60,600)}ms">
+        <span class="badge ${e.free?"free":"std"}">${e.free?"FREI":(i+1)+". STD"}</span>
+        <div class="time">⏰ <b>${e.time}–${endOf(e.time)}</b> · ${d}${dt?" · "+dt.toLocaleDateString("de-DE",{day:"2-digit",month:"2-digit"}):""}</div>
+        <div class="subj">${escapeH(sub)}</div>
+        <div class="chips"><span class="chip t">👩‍🏫 ${escapeH(e.teacher||"–")}</span><span class="chip r">🚪 ${escapeH(e.room||"–")}</span></div>
+      </div>`;
+      if(i<list.length-1){
+        const gap = toMin(list[i+1].time)-toMin(endOf(e.time));
+        if(gap>0) html += `<div class="pauseRow"><span>${pauseLabel(gap)}</span><b>${endOf(e.time)} – ${list[i+1].time}</b><span>· ${gap} Min</span></div>`;
+      }
+    });
+    html += `</div></div>`;
+  }
+  $("schedule").innerHTML = html;
+  // Change-Key für heute+morgen (für Nachrichten) – nur bei gleichem Plan + gleicher Klasse diffen
+  const key = JSON.stringify({c:S.className, t:tk?data.sched[tk]:null, m:mor?data.sched[mor]:null, g:S.gedruckt, u:S.cur.url});
+  if(S.lastKey){
+    try{
+      const old = JSON.parse(S.lastKey), cur = JSON.parse(key);
+      if(old.u===cur.u && old.c===cur.c && key!==S.lastKey) diffNotify(old, cur, tk, mor);
+    }catch(e){}
+  }
+  S.lastKey = key;
+  tick(); syncMnav();
+  if(S.firstLoad){ S.firstLoad=false; $("loader").classList.add("hide"); }
+}
+function escapeH(s){ return (s||"").replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+
+function tick(){
+  const bar = $("nowBar");
+  if(!bar || !S.pagesCache) return;
+  if(!S.weekDates.length || !inWeek()){ bar.hidden = true; return; }
+  const tk = todayKey();
+  let list = [];
+  try{ const d = extractSchedule(S.className); list = (d && d.sched[tk]) || []; }catch(e){ bar.hidden = true; return; }
+  if(!list.length){ bar.hidden = true; return; }
+  const now = new Date(), nm = now.getHours()*60+now.getMinutes();
+  const items = list.map(e=>({e, s:toMin(e.time), x:toMin(endOf(e.time))}));
+  const cur = items.find(o=>nm>=o.s && nm<o.x);
+  const nxt = items.find(o=>o.s>nm);
+  bar.hidden = false;
+  if(cur && !cur.e.free){
+    const left = cur.x-nm, pct = Math.round((nm-cur.s)/Math.max(1,(cur.x-cur.s))*100);
+    bar.className = "";
+    bar.innerHTML = `<div>▶ <b>Jetzt: ${escapeH(cur.e.subj)}</b> · ${escapeH(cur.e.teacher)} · Raum ${escapeH(cur.e.room)} · noch <b>${left} Min</b> (bis ${endOf(cur.e.time)})</div><div class="nowProg"><i style="width:${pct}%"></i></div>`;
+  } else if(nxt){
+    const left = nxt.s-nm;
+    bar.className = "pause";
+    const what = (cur && cur.e.free) ? `🚫 ${cur.e.time}–${endOf(cur.e.time)} entfällt` : nm < items[0].s ? "🌅 Schulstart" : "☕ Pause";
+    bar.innerHTML = `<div>${what} · weiter <b>${nxt.e.time}–${endOf(nxt.e.time)}</b> mit <b>${escapeH(nxt.e.subj)}</b> (${escapeH(nxt.e.teacher)}, Raum ${escapeH(nxt.e.room)}) · noch <b>${left} Min</b></div>`;
+  } else {
+    bar.className = "done";
+    bar.innerHTML = `<div>🏁 Für heute geschafft – schönen Feierabend! 🎉</div>`;
+  }
+}
+function syncMnav(){
+  document.querySelectorAll('#mnav button').forEach(b=>{
+    const m = b.dataset.m;
+    b.classList.toggle('on', m===S.dayFilter || (m==="home" && S.dayFilter==="today"));
+  });
+}
+
+function diffNotify(oldN, newN, tk, mor){
+  const msgs = [];
+  const cmp = (o,n,lab)=>{
+    if(!o && n) { msgs.push(`${lab}: Plan da (${n.length} Std.)`); return; }
+    if(!o||!n) return;
+    const m = new Map(o.map(e=>[e.time,e]));
+    for(const e of n){
+      const p = m.get(e.time);
+      if(!p){ msgs.push(`${lab} ${e.time}: ➕ neu → ${e.subj} (${e.teacher} ${e.room})`); }
+      else if(p.subj!==e.subj||p.teacher!==e.teacher||p.room!==e.room){
+        if(e.free && !p.free) msgs.push(`${lab} ${e.time}: ❌ jetzt ENTFALL (war ${p.subj})`);
+        else if(!e.free && p.free) msgs.push(`${lab} ${e.time}: ✅ findet statt → ${e.subj} (${e.teacher} ${e.room})`);
+        else msgs.push(`${lab} ${e.time}: 🔁 ${p.subj}→${e.subj} (${e.teacher} ${e.room})`);
+      }
+    }
+  };
+  cmp(oldN.t, newN.t, "Heute ("+tk+")"); cmp(oldN.m, newN.m, "Morgen ("+mor+")");
+  if(!msgs.length) msgs.push("Der Plan wurde aktualisiert (neuer Druckstand).");
+  const body = msgs.slice(0,4).join("\n");
+  toast("🔔 <b>Änderung für "+escapeH(S.className)+":</b><br>"+escapeH(body).replace(/\n/g,"<br>"), "warn");
+  beep(); try{ navigator.vibrate && navigator.vibrate([120,60,120]); }catch(e){}
+  if(window.Notification && Notification.permission==="granted"){
+    try{ new Notification("Pierer Plan – Änderung "+S.className, {body}); }catch(e){}
+  }
+  document.title = "🔴 Änderung! – Pierer Plan";
+  setTimeout(()=>document.title="Pierer Plan – Vertretungsplan App", 8000);
+}
+
+async function checkUpdates(manual=false){
+  try{
+    const before = S.plans[0] ? S.plans[0].url : null;
+    await loadPlanList();
+    const newest = S.plans[0];
+    S.lastCheck = new Date();
+    $("stUpd").textContent = fmtT(S.lastCheck);
+    if(S.auto && newest && S.cur && newest.url!==S.cur.url){
+      toast(`⭐ <b>Neuer Plan da:</b> ${escapeH(newest.label)} – wird geladen …`, "ok");
+      if(window.Notification && Notification.permission==="granted"){ try{ new Notification("Pierer Plan – neuer Plan", {body:newest.label}); }catch(e){} }
+      beep();
+      await loadPdf(newest, true);
+      buildClassSelect(); render(false);
+      return;
+    }
+  // Gleicher Plan: hat sich das PDF geändert (neuer Druckstand)?
+    if(S.cur){
+      try{
+        const buf = await sfetch(S.cur.url, "buf", 30000);
+        const a = new Uint8Array(buf), b = new Uint8Array(S.pdfBytes||[]);
+        let same = a.length===b.length;
+        if(same){ for(let i=0;i<a.length;i+=997){ if(a[i]!==b[i]){ same=false; break; } } }
+        if(!same){ await loadPdf(S.cur, true); buildClassSelect(); render(false); if(!manual) toast("🔄 Plan aktualisiert (neuer Druckstand) – Ansicht neu.", "ok"); }
+        else if(manual) toast("✅ Alles aktuell – kein neuer Plan.", "ok"); else render(false);
+      }catch(e){ if(manual) toast("⚠ Update-Check fehlgeschlagen: "+escapeH(e.message), "warn"); }
+    }
+    buildClassSelect();
+  }catch(e){ if(manual) toast("⚠ "+escapeH(e.message), "bad"); $("statusLine").textContent = "Update-Fehler: "+e.message; }
+}
+
+function showFatal(e){
+  stopSlowNotice();
+  $("loadFill").style.width = "100%";
+  $("loadStep").innerHTML = "⚠ <b>Keine Verbindung zur Schule möglich.</b><br><span style='font-size:12.5px'>("+escapeH(e.message||e)+")</span>"
+    +"<div style='font-size:12.5px;color:var(--mut);text-align:left;margin:10px 4px;line-height:1.7'>Bitte prüfen:<br>1️⃣ WLAN oder mobile Daten wirklich an?<br>2️⃣ In der APK-App: Berechtigung „WLAN/Netzwerk“ erlaubt?<br>3️⃣ VPN, Adblocker oder Datensparmodus mal ausmachen (blockiert oft pierer-schule.de oder cdn.jsdelivr/esm.sh).<br>4️⃣ Handyuhr auf „automatisch“ stellen.</div>"
+    +'<button class="btn small primary" style="margin-top:6px" onclick="location.reload()">↻ Nochmal versuchen</button><br><br><a style="color:#a5b4ff" target="_blank" href="'+SCHEDULE_INDEX+'">Direkt zur Schul-Übersicht →</a>';
+  const ex = $("loadExtra"); if(ex) ex.hidden = false;
+  const sub = $("loadSub"); if(sub) sub.textContent = "";
+}
+async function boot(){
+  step("Starte …", 8);
+  startSlowNotice();
+  $("autoSw").classList.toggle("on", S.auto);
+  $("classSel").onchange = e=>{ S.className=e.target.value; localStorage.setItem("pierer_class",S.className); render(false); toast("🎒 Klasse: <b>"+escapeH(S.className)+"</b>", "ok"); };
+  $("planSel").onchange = async e=>{ const p=S.plans.find(x=>x.url===e.target.value); if(p){ try{ await loadPdf(p); }catch(err){ toast("⚠ "+escapeH(err.message),"bad"); } } };
+  $("todayBtn").onclick = ()=>{ S.dayFilter="auto"; render(false); };
+  $("reloadBtn").onclick = ()=>checkUpdates(true);
+  $("pdfBtn").onclick = ()=>{ if(S.cur) window.open(S.cur.url,"_blank"); };
+  document.querySelectorAll('#mnav button').forEach(b=>{ b.onclick=()=>{
+    const m = b.dataset.m;
+    if(m==="reload"){ checkUpdates(true); return; }
+    const v = m==="home" ? ((inWeek()&&todayKey())?"today":"auto") : m;
+    const t = document.querySelector(`#daySeg button[data-v="${v}"]`) || document.querySelector('#daySeg button[data-v="auto"]');
+    if(t) t.click(); else { S.dayFilter = v==="today"?"auto":v; render(false); }
+  };});
+  setInterval(tick, 20000);
+  $("autoSw").onclick = ()=>{ S.auto=!S.auto; localStorage.setItem("pierer_auto",S.auto?"1":"0"); $("autoSw").classList.toggle("on",S.auto); toast(S.auto?"🔄 Auto an: immer neuesten Plan öffnen.":"⏸ Auto aus: Plan bleibt fixiert."); };
+  $("notifyBtn").onclick = async ()=>{
+    if(!("Notification" in window)){ toast("❌ Dieser Browser kann keine Nachrichten.", "bad"); return; }
+    const p = await Notification.requestPermission();
+    if(p==="granted"){ toast("🔔 <b>Nachrichten an!</b> Lass den Tab offen (auch im Hintergrund) – bei Änderungen für heute/morgen meldet sich die App mit Ton.", "ok"); beep();
+      try{ new Notification("Pierer Plan aktiv", {body:"Du bekommst Änderungen für "+S.className+" (heute/morgen)."}); }catch(e){} }
+    else toast("🔕 Nachrichten blockiert – erlaube sie in den Browser-Einstellungen.", "warn");
+    $("notifyBtn").classList.add("on");
+  };
+  if(window.Notification && Notification.permission==="granted") $("notifyBtn").classList.add("on");
+  document.addEventListener("visibilitychange", ()=>{ if(!document.hidden && document.title.startsWith("🔴")) document.title="Pierer Plan – Vertretungsplan App"; });
+  // 1) Sofort-Start aus Cache (stale-while-revalidate): App ist in <1s da,
+  //    auch wenn das Schul-WLAN gerade klemmt. Frische Daten kommen danach.
+  const cached = Cache.load();
+  let cacheShown = false;
+  if(cached && cached.pdfB64){
+    try{
+      S.plans = (cached.plans||[]).map(p=>({...p, date:p.date?new Date(p.date):null}));
+      const plan = S.plans.find(p=>p.url===cached.curUrl) || S.plans[0];
+      if(plan){
+        S.offline = true; S.offlineSince = cached.savedAt || Date.now();
+        step("Gespeicherter Stand wird geöffnet …", 35);
+        skeleton();
+        await loadPdfFromBytes(b64decode(cached.pdfB64), plan, true);
+        S.offline = true;
+        S.lastCheck = new Date(S.offlineSince);
+        stopSlowNotice();
+        if(S.firstLoad){ S.firstLoad=false; $("loader").classList.add("hide"); }
+        $("liveTxt").textContent = "offline-Stand · aktualisiere …";
+        $("statusLine").innerHTML = `Gespeicherter Stand vom <b>${fmtD(new Date(S.offlineSince))}, ${fmtT(new Date(S.offlineSince))}</b> – suche jetzt nach Neuem …`;
+        toast("📴 <b>Gespeicherten Stand geöffnet</b> – suche jetzt nach dem neuesten Plan …", "warn");
+        cacheShown = true;
+      }
+    }catch(e2){ console.warn("cache render failed", e2); }
+  }
+  // 2) Frische Daten holen (mit Fallbacks + klarer Fehlermeldung statt Endlos-Lader)
+  try{
+    step(cacheShown ? "Suche nach neueren Plänen …" : "Suche alle Wochen-Pläne …", cacheShown?25:30);
+    await loadPlanList();
+    const newest = S.plans[0];
+    if(!newest) throw new Error("Keine Pläne gefunden.");
+    const needLoad = !S.cur || (newest.url!==S.cur.url) || !cacheShown;
+    S.offline = needLoad ? S.offline : false;
+    if(needLoad){
+      step("Neuster Plan: "+newest.label+" …", 55);
+      await loadPdf(newest, cacheShown);
+    } else {
+      S.cur = newest;
+      try{ buildClassSelect(); render(false); }catch(e){}
+    }
+    stopSlowNotice();
+    S.offline = false;
+    try{ buildClassSelect(); render(false); }catch(e){}
+    S.lastCheck = new Date();
+    if(S.firstLoad){ S.firstLoad=false; }
+    $("loader").classList.add("hide");
+    toast(`⭐ <b>Neuesten Plan geöffnet:</b> ${escapeH(newest.label)} (${fmtD(newest.date)}) · Klasse <b>${escapeH(S.className)}</b>`, "ok");
+    S.timer = S.timer || setInterval(()=>checkUpdates(false), CHECK_MS);
+  }catch(e){
+    console.error(e);
+    if(cacheShown){
+      stopSlowNotice();
+      S.timer = S.timer || setInterval(()=>checkUpdates(false), CHECK_MS);
+      toast("⚠ <b>Kein Update möglich:</b> "+escapeH(e.message)+" – zeige gespeicherten Stand.", "bad");
+      return;
+    }
+    showFatal(e);
+  }
+}
+window.__piererTest = {boot, loadPdfFromBytes, Cache, b64decode, S};
+boot();
+</script>
+
+</body>
+</html>
